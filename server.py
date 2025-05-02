@@ -68,6 +68,7 @@ def handle_client(client_socket, address):
 
 def print_stats():
     while True:
+        print("Printing stats...")  # 调试输出，确认函数被调用
         time.sleep(10)  # 每10秒输出一次统计信息
         with lock:
             num_tuples = len(tuple_space)
@@ -96,9 +97,11 @@ def start_server(port):
 # 启动后台线程打印统计信息
     stats_thread = threading.Thread(target=print_stats, daemon=True)
     stats_thread.start()
+    print("Started stats thread")  # 调试输出
 
     while True:
         client_socket, address = server.accept()
+        print(f"New connection from {address}")  # 调试输出
         thread = threading.Thread(target=handle_client, args=(client_socket, address))
         thread.start()
 
