@@ -24,6 +24,12 @@ def main():
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((host, port))
     client.send(request.encode())
+    
+    # 接收并打印响应
+    response = client.recv(1024).decode()
+    print(f"Response: {response}")
+    
+    
     client.close()
 
 if __name__ == "__main__":

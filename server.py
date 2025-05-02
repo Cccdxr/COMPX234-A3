@@ -1,6 +1,9 @@
 import socket
 import threading
 
+tuple_space = {}  # 共享元组空间
+lock = threading.Lock()  # 用于线程同步
+
 def handle_client(client_socket, address):
     print(f"[+] Connected with {address}")
     
@@ -22,14 +25,26 @@ def handle_client(client_socket, address):
             op, key = parts[0], parts[1]
             value = parts[2] if len(parts) == 3 else ""
             
-            if op == 'P':
-                response = f"OK ({key}, {value}) added"  # 先假装添加成功
-            elif op == 'R':
-                response = f"OK ({key}, dummy_value) read"
-            elif op == 'G':
-                response = f"OK ({key}, dummy_value) removed"
-            else:
-                response = "ERR unknown operation"
+            with lock:
+                if op == "P":
+                    if key in tuple_space:
+                        response = f"ERR {key} already exists"
+                    else:
+                        tuple_space[key] = value
+                        response = f"OK ({key}, {value}) added"
+                elif op == "R":
+                    if key in tuple_space:
+                        response = f"OK ({key}, {tuple_space[key]}) read"
+                    else:
+                        response = f"ERR {key} does not exist"
+                elif op == "G":
+                    if key in tuple_space:
+                        val = tuple_space.pop(key)
+                        response = f"OK ({key}, {val}) removed"
+                    else:
+                        response = f"ERR {key} does not exist"
+                else:
+                     response = "ERR unknown operation"
 
         # 加上响应协议格式
         full_response = f"{len(response)+4:03d} {response}"
