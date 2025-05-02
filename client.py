@@ -17,13 +17,12 @@ def main():
     request = sys.argv[3]
 
     # 协议封装
-    request = sys.argv[3]
     request_msg = encode_request(request)
    
     # 发送请求
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((host, port))
-    client.send(request.encode())
+    client.send(request_msg.encode())
     
     # 接收并打印响应
     response = client.recv(1024).decode()
