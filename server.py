@@ -17,6 +17,8 @@ def handle_client(client_socket, address):
     global total_clients, total_ops, put_count, get_count, read_count, err_count
     print(f"[+] Connected with {address}")
     
+    with lock:
+        total_clients += 1  # 每个连接增加总客户端数
     try:
         data = client_socket.recv(1024).decode()
         if not data:
@@ -40,22 +42,34 @@ def handle_client(client_socket, address):
                 if op == "P":
                     if key in tuple_space:
                         response = f"ERR {key} already exists"
+                        err_count += 1
                     else:
                         tuple_space[key] = value
                         response = f"OK ({key}, {value}) added"
+                        put_count += 1
+                        print(f"[DEBUG] Current tuple space: {tuple_space}")
+                        print(f"[DEBUG] PUT count: {put_count}, GET count: {get_count}, READ count: {read_count}")
                 elif op == "R":
                     if key in tuple_space:
                         response = f"OK ({key}, {tuple_space[key]}) read"
+                        read_count += 1
                     else:
                         response = f"ERR {key} does not exist"
+                        print(f"[DEBUG] READ count: {read_count}")
+                        err_count += 1
                 elif op == "G":
                     if key in tuple_space:
                         val = tuple_space.pop(key)
                         response = f"OK ({key}, {val}) removed"
+                        get_count += 1
+                        print(f"[DEBUG] Current tuple space after G: {tuple_space}")
+                        print(f"[DEBUG] GET count: {get_count}")
                     else:
                         response = f"ERR {key} does not exist"
+                        err_count += 1
                 else:
                      response = "ERR unknown operation"
+                     err_count += 1
 
         # 加上响应协议格式
         full_response = f"{len(response)+4:03d} {response}"
