@@ -56,7 +56,6 @@ def handle_client(client_socket, address):
                         read_count += 1
                     else:
                         response = f"ERR {key} does not exist"
-                        print(f"[DEBUG] READ count: {read_count}")
                         err_count += 1
                 elif op == "G":
                     get_count += 1  # 无论键是否存在，均计数
@@ -65,7 +64,6 @@ def handle_client(client_socket, address):
                         response = f"OK ({key}, {val}) removed"
                         get_count += 1
                         print(f"[DEBUG] Current tuple space after G: {tuple_space}")
-                        print(f"[DEBUG] GET count: {get_count}")
                     else:
                         response = f"ERR {key} does not exist"
                         err_count += 1
