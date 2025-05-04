@@ -8,6 +8,17 @@ def encode_request(command: str) -> str:
     return f"{total_len:03d} {body}"
 
 def send_request(host, port, request_line):
+    # 转换操作码：PUT -> P, READ -> R, GET -> G
+    parts = request_line.strip().split(" ", 1)
+    if len(parts) >= 1:
+        op = parts[0].upper()
+        if op == "PUT":
+            request_line = "P " + parts[1] if len(parts) > 1 else "P"
+        elif op == "READ":
+            request_line = "R " + parts[1] if len(parts) > 1 else "R"
+        elif op == "GET":
+            request_line = "G " + parts[1] if len(parts) > 1 else "G"
+    
     request_msg = encode_request(request_line)
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
