@@ -1,0 +1,5 @@
+GET silvertip
+GET michel_montaigne
+PUT hard_liquor an alcoholic beverage that is distilled rather than fermented
+PUT al_aqabah Jordan's port; located in southwestern Jordan on the Gulf of Aqaba
+READ mulberry_tree
