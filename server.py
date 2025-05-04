@@ -50,6 +50,7 @@ def handle_client(client_socket, address):
                         print(f"[DEBUG] Current tuple space: {tuple_space}")
                         print(f"[DEBUG] PUT count: {put_count}, GET count: {get_count}, READ count: {read_count}")
                 elif op == "R":
+                    read_count += 1  # 无论键是否存在，均计数
                     if key in tuple_space:
                         response = f"OK ({key}, {tuple_space[key]}) read"
                         read_count += 1
@@ -58,6 +59,7 @@ def handle_client(client_socket, address):
                         print(f"[DEBUG] READ count: {read_count}")
                         err_count += 1
                 elif op == "G":
+                    get_count += 1  # 无论键是否存在，均计数
                     if key in tuple_space:
                         val = tuple_space.pop(key)
                         response = f"OK ({key}, {val}) removed"
