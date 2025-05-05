@@ -5,7 +5,7 @@ import time
 tuple_space = {}  # 共享元组空间
 lock = threading.Lock()  # 用于线程同步
 
-# 新增统计变量
+# 统计相关的全局变量
 total_clients = 0
 total_ops = 0
 put_count = 0
@@ -13,6 +13,7 @@ get_count = 0
 read_count = 0
 err_count = 0
 
+# 处理客户端请求的函数
 def handle_client(client_socket, address):
     global total_clients, total_ops, put_count, get_count, read_count, err_count
     print(f"[+] Connected with {address}")
@@ -20,19 +21,19 @@ def handle_client(client_socket, address):
     with lock:
         total_clients += 1  # 每个连接增加总客户端数
     try:
-        data = client_socket.recv(1024).decode()
+        data = client_socket.recv(1024).decode() # 接收客户端请求
         if not data:
             return
 
         print(f"[REQ] {data.strip()}")
 
         # 解析协议内容
-        size_str = data[:3]
-        message = data[4:]
-        parts = message.strip().split(" ", 2)
+        size_str = data[:3] # 解析消息长度
+        message = data[4:] # 消息内容
+        parts = message.strip().split(" ", 2) # 解析操作和键值
 
         if len(parts) < 2:
-            response = "ERR invalid message format"
+            response = "ERR invalid message format" # 格式不正确
         else:
             op, key = parts[0], parts[1]
             value = parts[2] if len(parts) == 3 else ""
@@ -71,8 +72,7 @@ def handle_client(client_socket, address):
                      response = "ERR unknown operation"
                      err_count += 1
 
-        # 加上响应协议格式
-        full_response = f"{len(response)+4:03d} {response}"
+        full_response = f"{len(response)+4:03d} {response}"  # 格式化响应
         client_socket.send(full_response.encode())
 
     except Exception as e:
@@ -80,6 +80,7 @@ def handle_client(client_socket, address):
     
     client_socket.close()
 
+# 打印统计信息的线程函数
 def print_stats():
     while True:
         print("Printing stats...")  # 调试输出，确认函数被调用
@@ -101,7 +102,8 @@ def print_stats():
             print(f"Total operations: {total_ops}")
             print(f"PUT: {put_count}, GET: {get_count}, READ: {read_count}, ERR: {err_count}")
             print("---------------------\n")
-            
+
+# 启动服务器并接受客户端连接            
 def start_server(port):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(("localhost", port))
@@ -114,8 +116,8 @@ def start_server(port):
     print("Started stats thread")  # 调试输出
 
     while True:
-        client_socket, address = server.accept()
-        print(f"New connection from {address}")  # 调试输出
+        client_socket, address = server.accept() # 接受客户端连接
+        print(f"New connection from {address}")  # 打印客户端连接信息
         thread = threading.Thread(target=handle_client, args=(client_socket, address))
         thread.start()
 

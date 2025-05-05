@@ -7,9 +7,10 @@ def encode_request(command: str) -> str:
     total_len = len(body) + 4  # 3位长度+空格
     return f"{total_len:03d} {body}"
 
+# 发送请求到服务器并接收响应
 def send_request(host, port, request_line):
     # 转换操作码：PUT -> P, READ -> R, GET -> G
-    parts = request_line.strip().split(" ", 1)
+    parts = request_line.strip().split(" ", 1) # 分割操作和键值
     if len(parts) >= 1:
         op = parts[0].upper()
         if op == "PUT":
@@ -19,18 +20,19 @@ def send_request(host, port, request_line):
         elif op == "GET":
             request_line = "G " + parts[1] if len(parts) > 1 else "G"
     
-    request_msg = encode_request(request_line)
+    request_msg = encode_request(request_line)# 编码请求
 
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((host, port))
-    client.send(request_msg.encode())
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # 创建 TCP 客户端套接字
+    client.connect((host, port)) # 连接服务器
+    client.send(request_msg.encode()) # 发送请求消息
 
-    response = client.recv(1024).decode()
+    response = client.recv(1024).decode() # 接收服务器响应
     print(f"Request: {request_line}")
     print(f"Response: {response}\n")
 
     client.close()
 
+# 主函数，解析命令行参数并启动客户端
 def main():
     if len(sys.argv) < 4:
         print("Usage:")
@@ -41,7 +43,7 @@ def main():
     host = sys.argv[1]
     port = int(sys.argv[2])
     
-    if sys.argv[3] == "-f":
+    if sys.argv[3] == "-f": # 文件模式
         if len(sys.argv) != 5:
             print("Usage: python client.py <host> <port> -f <filename>")
             sys.exit(1)
@@ -56,7 +58,7 @@ def main():
             print(f"File not found: {filename}")
             sys.exit(1)
     else:
-        request_line = sys.argv[3]
+        request_line = sys.argv[3] # 单条请求
         send_request(host, port, request_line)
 
 
