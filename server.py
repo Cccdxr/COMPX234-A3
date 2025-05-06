@@ -2,10 +2,10 @@ import socket
 import threading
 import time  
 
-tuple_space = {}  # 共享元组空间
-lock = threading.Lock()  # 用于线程同步
+tuple_space = {}  # Shared tuple space
+lock = threading.Lock()  # Used for thread synchronization
 
-# 统计相关的全局变量
+# Global variables for statistics
 total_clients = 0
 total_ops = 0
 put_count = 0
@@ -13,33 +13,33 @@ get_count = 0
 read_count = 0
 err_count = 0
 
-# 处理客户端请求的函数
+# Function to handle client requests
 def handle_client(client_socket, address):
     global total_clients, total_ops, put_count, get_count, read_count, err_count
     print(f"[+] Connected with {address}")
     
     with lock:
-        total_clients += 1  # 每个连接增加总客户端数
+        total_clients += 1  # Increment total client count for each connection
     try:
-        data = client_socket.recv(1024).decode() # 接收客户端请求
+        data = client_socket.recv(1024).decode() # Receive client request
         if not data:
             return
 
         print(f"[REQ] {data.strip()}")
 
-        # 解析协议内容
-        size_str = data[:3] # 解析消息长度
-        message = data[4:] # 消息内容
-        parts = message.strip().split(" ", 2) # 解析操作和键值
+        # Parse protocol content
+        size_str = data[:3] # Extract message length
+        message = data[4:] # Extract message body
+        parts = message.strip().split(" ", 2) # Extract operation, key, and value
 
         if len(parts) < 2:
-            response = "ERR invalid message format" # 格式不正确
+            response = "ERR invalid message format" # Invalid format
         else:
             op, key = parts[0], parts[1]
             value = parts[2] if len(parts) == 3 else ""
             
             with lock:
-                total_ops += 1  # 增加操作计数
+                total_ops += 1  # Increment total operation count
                 if op == "P":
                     if key in tuple_space:
                         response = f"ERR {key} already exists"
@@ -51,7 +51,7 @@ def handle_client(client_socket, address):
                         print(f"[DEBUG] Current tuple space: {tuple_space}")
                         print(f"[DEBUG] PUT count: {put_count}, GET count: {get_count}, READ count: {read_count}")
                 elif op == "R":
-                    read_count += 1  # 无论键是否存在，均计数
+                    read_count += 1  # Count READ regardless of key existence
                     if key in tuple_space:
                         response = f"OK ({key}, {tuple_space[key]}) read"
                         read_count += 1
@@ -59,7 +59,7 @@ def handle_client(client_socket, address):
                         response = f"ERR {key} does not exist"
                         err_count += 1
                 elif op == "G":
-                    get_count += 1  # 无论键是否存在，均计数
+                    get_count += 1  # Count GET regardless of key existence
                     if key in tuple_space:
                         val = tuple_space.pop(key)
                         response = f"OK ({key}, {val}) removed"
@@ -72,7 +72,7 @@ def handle_client(client_socket, address):
                      response = "ERR unknown operation"
                      err_count += 1
 
-        full_response = f"{len(response)+4:03d} {response}"  # 格式化响应
+        full_response = f"{len(response)+4:03d} {response}"  # Format the response
         client_socket.send(full_response.encode())
 
     except Exception as e:
@@ -80,11 +80,11 @@ def handle_client(client_socket, address):
     
     client_socket.close()
 
-# 打印统计信息的线程函数
+# Thread function to print statistics
 def print_stats():
     while True:
-        print("Printing stats...")  # 调试输出，确认函数被调用
-        time.sleep(10)  # 每10秒输出一次统计信息
+        print("Printing stats...")  # Debug output to confirm function call
+        time.sleep(10)  # Output stats every 10 seconds
         with lock:
             num_tuples = len(tuple_space)
             key_lengths = [len(k) for k in tuple_space.keys()]
@@ -103,21 +103,21 @@ def print_stats():
             print(f"PUT: {put_count}, GET: {get_count}, READ: {read_count}, ERR: {err_count}")
             print("---------------------\n")
 
-# 启动服务器并接受客户端连接            
+# Start the server and accept client connections            
 def start_server(port):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(("localhost", port))
     server.listen(5)
     print(f"[SERVER] Listening on port {port}...")
 
-# 启动后台线程打印统计信息
+# Start background thread to print stats
     stats_thread = threading.Thread(target=print_stats, daemon=True)
     stats_thread.start()
-    print("Started stats thread")  # 调试输出
+    print("Started stats thread")  # Debug output
 
     while True:
-        client_socket, address = server.accept() # 接受客户端连接
-        print(f"New connection from {address}")  # 打印客户端连接信息
+        client_socket, address = server.accept() # Accept client connection
+        print(f"New connection from {address}")  # Print client connection info
         thread = threading.Thread(target=handle_client, args=(client_socket, address))
         thread.start()
 
